@@ -14,9 +14,13 @@ const commentSchema = new Schema(
       type: String,
       required: true,
     },
+
+    //mongoose population
+    //Cross-reference
+    //Object Id's
     author: {
-      type: String,
-      required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {

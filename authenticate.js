@@ -6,7 +6,6 @@ var ExtractJwt = require("passport-jwt").ExtractJwt;
 var jwt = require("jsonwebtoken");
 
 var config = require("./config");
-const { ExtractJwt } = require("passport-jwt");
 
 exports.local = passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
@@ -14,15 +13,14 @@ passport.deserializeUser(User.deserializeUser());
 exports.getToken = function (user) {
   return jwt.sign(user, config.secretKey, { expiresIn: 3600 });
 };
-
 var opts = {};
 
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+opts.jwtFromRequest = ExtractJwt.fromAuthHeaderWithScheme("Bearer");
 opts.secretOrKey = config.secretKey;
 
 exports.jwtPassport = passport.use(
   new JwtStrategy(opts, (jwt_payload, done) => {
-    console.log(jwt_payload);
+    console.log("JWT payload: ", jwt_payload);
     User.findOne({ _id: jwt_payload._id }, (err, user) => {
       if (err) {
         return done(err, false);
@@ -36,3 +34,14 @@ exports.jwtPassport = passport.use(
 );
 
 exports.verifyUser = passport.authenticate("jwt", { session: false });
+
+exports.verifyAdmin = (req, res, next) => {
+  console.log(req.user);
+  if (req.user.admin) {
+    next();
+  } else {
+    var err = new Error("Only admin accounts are permitted");
+    err.status = 404;
+    next(err);
+  }
+};
